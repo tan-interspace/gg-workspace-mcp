@@ -71,10 +71,10 @@ export function startAuthPortal() {
         } catch (e) {}
 
         res.send(`
-            <html><head><title>PubPug Google Portal</title></head>
+            <html><head><title>Google Workspace Portal</title></head>
             <body style='font-family:sans-serif;padding:50px;background:#f0f2f5;display:flex;justify-content:center'>
             <div style='max-width:500px;background:#fff;padding:40px;border-radius:15px;box-shadow:0 4px 20px rgba(0,0,0,.1);text-align:center'>
-            <h1 style='color:#1a73e8'>PubPug Google MCP (TS) 🐶</h1>
+            <h1 style='color:#1a73e8'>Google Workspace Portal</h1>
             <p style='font-size:18px;color:${authenticated ? "#4CAF50" : "#f44336"};font-weight:bold'>
                 ${authenticated ? "Authenticated ✅" : "Not Authenticated ❌"}
             </p>
