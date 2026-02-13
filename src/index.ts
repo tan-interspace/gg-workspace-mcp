@@ -26,6 +26,16 @@ async function getGmailService() {
     return google.gmail({ version: 'v1', auth });
 }
 
+async function getCalendarService() {
+    const auth = await getAuthClient();
+    return google.calendar({ version: 'v3', auth });
+}
+
+async function getDriveService() {
+    const auth = await getAuthClient();
+    return google.drive({ version: 'v3', auth });
+}
+
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
@@ -45,6 +55,52 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             body: { type: "string" },
           },
           required: ["to", "subject", "body"],
+        },
+      },
+      {
+        name: "list_calendar_events",
+        description: "List events from Google Calendar. Timezone: Asia/Ho_Chi_Minh.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            max_results: { type: "number", default: 10 },
+            days_back: { type: "number", default: 0 },
+          },
+        },
+      },
+      {
+        name: "create_calendar_event",
+        description: "Create a calendar event. Format: YYYY-MM-DDTHH:MM (VN Time).",
+        inputSchema: {
+          type: "object",
+          properties: {
+            summary: { type: "string" },
+            start_time: { type: "string" },
+            end_time: { type: "string" },
+            description: { type: "string" },
+          },
+          required: ["summary", "start_time", "end_time"],
+        },
+      },
+      {
+        name: "list_drive_folders",
+        description: "List all folders in Google Drive.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            parent_id: { type: "string", default: "root" },
+          },
+        },
+      },
+      {
+        name: "search_drive",
+        description: "Search for files in Google Drive.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            query: { type: "string" },
+          },
+          required: ["query"],
         },
       },
     ],
@@ -89,6 +145,77 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return {
             content: [{ type: "text", text: `✅ Email sent! ID: ${res.data.id}` }],
         };
+    }
+
+    if (name === "list_calendar_events") {
+        const { max_results = 10, days_back = 0 } = args as { max_results?: number; days_back?: number };
+        const calendar = await getCalendarService();
+        const timeMin = new Date(Date.now() - days_back * 24 * 60 * 60 * 1000).toISOString();
+        
+        const res = await calendar.events.list({
+            calendarId: 'primary',
+            timeMin,
+            maxResults: max_results,
+            singleEvents: true,
+            orderBy: 'startTime',
+        });
+
+        const events = res.data.items || [];
+        if (events.length === 0) return { content: [{ type: "text", text: "No events found." }] };
+
+        const text = events.map(e => `- ${e.start?.dateTime || e.start?.date}: ${e.summary} (ID: ${e.id})`).join('\n');
+        return { content: [{ type: "text", text }] };
+    }
+
+    if (name === "create_calendar_event") {
+        const { summary, start_time, end_time, description = "" } = args as { summary: string; start_time: string; end_time: string; description?: string };
+        const calendar = await getCalendarService();
+        
+        const res = await calendar.events.insert({
+            calendarId: 'primary',
+            requestBody: {
+                summary,
+                description,
+                start: { dateTime: `${start_time}:00`, timeZone: 'Asia/Ho_Chi_Minh' },
+                end: { dateTime: `${end_time}:00`, timeZone: 'Asia/Ho_Chi_Minh' },
+            },
+        });
+
+        return { content: [{ type: "text", text: `✅ Event created: ${res.data.htmlLink}` }] };
+    }
+
+    if (name === "list_drive_folders") {
+        const { parent_id = "root" } = args as { parent_id?: string };
+        const drive = await getDriveService();
+        const query = `'${parent_id}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+        
+        const res = await drive.files.list({
+            q: query,
+            fields: 'files(id, name, webViewLink)',
+            pageSize: 100,
+        });
+
+        const items = res.data.files || [];
+        if (items.length === 0) return { content: [{ type: "text", text: "No folders found." }] };
+
+        const text = items.map(item => `📁 ${item.name}\n   ID: ${item.id}\n   Link: ${item.webViewLink || 'N/A'}\n`).join('\n');
+        return { content: [{ type: "text", text }] };
+    }
+
+    if (name === "search_drive") {
+        const { query } = args as { query: string };
+        const drive = await getDriveService();
+        
+        const res = await drive.files.list({
+            q: query,
+            fields: 'files(id, name, mimeType)',
+        });
+
+        const items = res.data.files || [];
+        if (items.length === 0) return { content: [{ type: "text", text: "No files found." }] };
+
+        const text = items.map(item => `- ${item.name} (${item.id})`).join('\n');
+        return { content: [{ type: "text", text }] };
     }
 
     throw new Error(`Tool not found: ${name}`);
