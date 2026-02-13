@@ -4,67 +4,67 @@ The **fastest**, most lightweight **Google Workspace MCP Server** powered by [Bu
 
 Manage your entire Google Workspace (Gmail, Calendar, Drive, Docs, Sheets, Slides) directly through natural language with AI assistants like Claude, Cursor, and more.
 
+> **📚 Documentation**
+> - **[Installation & User Guide](GUIDE.md)** - Full setup instructions, authentication, and troubleshooting.
+> - **[Client Configuration](MCP_CLIENTS.md)** - Ready-to-use configs for Claude, Cursor, VS Code, JetBrains, and 20+ other clients.
+
 ---
 
 ## 🌟 Features
 
 - **⚡ Blazing Fast:** Built with Bun for near-instant execution and low overhead.
 - **🔐 1-Click Auth:** Built-in Auth Portal for effortless Google Account connection.
-- **📦 Zero-Config:** Use via `npx` or `bunx` with no manual installation needed.
 - **🛠️ Comprehensive:** 20+ tools covering the essential Google Workspace ecosystem.
 - **🛡️ Secure:** Pure TypeScript implementation with official Google SDKs.
 
 ---
 
-## 🚀 Quick Start (via npx / bunx)
+## 🚀 Quick Start
 
-You don't even need to clone this repo! Just run it directly:
+**Prerequisite:** [Bun](https://bun.sh) installed.
 
-### 1. Configure Credentials
-Set your Google OAuth credentials as environment variables:
-```bash
-export GOOGLE_CLIENT_ID="your_client_id"
-export GOOGLE_CLIENT_SECRET="your_client_secret"
-export AUTH_PORT=3838
-```
+1. **Clone & Install**
+   ```bash
+   git clone https://github.com/tannht/gg-workspace-mcp.git
+   cd gg-workspace-mcp
+   bun install
+   ```
 
-### 2. Launch the Server
-```bash
-npx gg-workspace-mcp
-# or
-bunx gg-workspace-mcp
-```
+2. **Set Credentials**
+   ```bash
+   cp .env.example .env
+   # Edit .env and update GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET
+   ```
+   *(See [GUIDE.md](GUIDE.md) for how to get these credentials)*
 
-### 3. Authorize
-Open `http://localhost:3838` in your browser to link your Google account. One click and you're done! ✅
+3. **Run Server**
+   ```bash
+   bun run src/index.ts
+   ```
 
 ---
 
 ## 🤖 MCP Client Integration
 
-### Claude Desktop
-Add this to your `claude_desktop_config.json`:
+We support **25+ clients** including Claude Desktop, Cursor, VS Code, JetBrains, and more.
+
+👉 **[Click here to view the full Client Configuration Guide (MCP_CLIENTS.md)](MCP_CLIENTS.md)**
+
+**Quick Example (Claude Desktop):**
 ```json
 {
   "mcpServers": {
-    "gg-workspace": {
-      "command": "npx",
-      "args": ["-y", "gg-workspace-mcp"],
+    "gg-workspace-mcp": {
+      "command": "bun",
+      "args": ["run", "/absolute/path/to/gg-workspace-mcp/src/index.ts"],
       "env": {
-        "GOOGLE_CLIENT_ID": "your_id",
-        "GOOGLE_CLIENT_SECRET": "your_secret",
-        "AUTH_PORT": "3838"
+        "GOOGLE_CLIENT_ID": "...",
+        "GOOGLE_CLIENT_SECRET": "..."
       }
     }
   }
 }
 ```
-
-### Cursor / Cline / Roo Code
-Configure the server using the following settings:
-- **Command:** `npx`
-- **Args:** `-y`, `gg-workspace-mcp`
-- **Environment Variables:** `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
 
 ---
 
@@ -72,7 +72,7 @@ Configure the server using the following settings:
 
 | Category | Available Tools |
 | :--- | :--- |
-| **📧 Gmail** | `get_account_info`, `send_email`, `list_gmail_labels`, `create_gmail_label` |
+| **📧 Gmail** | `get_account_info`, `send_email` |
 | **📅 Calendar** | `list_calendar_events`, `create_calendar_event` |
 | **📁 Drive** | `list_drive_folders`, `search_drive` |
 | **📝 Docs** | `create_document`, `get_document`, `append_to_document` |
@@ -83,14 +83,15 @@ Configure the server using the following settings:
 
 ## 🛠️ Local Development
 
-If you want to contribute or customize the server:
-
 ```bash
-git clone https://github.com/tannht/gg-workspace-mcp.git
-cd gg-workspace-mcp
-bun install
-bun src/index.ts
+# Run locally
+bun run src/index.ts
+
+# Run tests (if added)
+bun test
 ```
+
+For detailed troubleshooting and development setup, see [GUIDE.md](GUIDE.md).
 
 ---
 
